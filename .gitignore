@@ -39,6 +39,3 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
-
-#Overshoot API keys
-OVERSHOOT_API_KEY="ovs_ffd0be1cc87ca458d50e86b6591e8897"
