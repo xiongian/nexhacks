@@ -15,11 +15,7 @@ interface UseOvershootVisionReturn {
   error: string | null
   startVision: () => Promise<void>
   stopVision: () => Promise<void>
-<<<<<<< HEAD
   videoRef: React.RefObject<HTMLVideoElement | null>
-=======
-  videoRef: React.RefObject<HTMLVideoElement>
->>>>>>> 21b3fce (Overshoot text updates in dashboard)
 }
 
 export function useOvershootVision(): UseOvershootVisionReturn {
@@ -64,7 +60,6 @@ export function useOvershootVision(): UseOvershootVisionReturn {
     try {
       setError(null)
 
-<<<<<<< HEAD
       // Get camera access first
       const stream = await navigator.mediaDevices.getUserMedia({
         video: { width: 640, height: 480, facingMode: 'user' },
@@ -82,18 +77,12 @@ export function useOvershootVision(): UseOvershootVisionReturn {
         }
       })
 
-=======
->>>>>>> 21b3fce (Overshoot text updates in dashboard)
       // Initialize vision with the same configuration as the backend
       const vision = new RealtimeVision({
         apiUrl: 'https://cluster1.overshoot.ai/api/v0.2',
         apiKey: 'ovs_8ecb8c7d11ea73ef6b99395c4c48fc9f',
         prompt: 'Describe the danger on a scale of 1 to 10. Increase score if sudden movements.',
-<<<<<<< HEAD
 
-=======
-        videoElement: videoRef.current,
->>>>>>> 21b3fce (Overshoot text updates in dashboard)
         onResult: (result) => {
           const text = result.result || "No text detected"
           const dangerLevel = extractDangerLevel(text)
@@ -125,17 +114,11 @@ export function useOvershootVision(): UseOvershootVisionReturn {
     if (visionRef.current) {
       try {
         await visionRef.current.stop()
-<<<<<<< HEAD
         console.log('Vision analysis stopped')
-=======
-        setIsActive(false)
-        console.log('Camera stopped')
->>>>>>> 21b3fce (Overshoot text updates in dashboard)
       } catch (err) {
         console.error('Error stopping vision:', err)
       }
     }
-<<<<<<< HEAD
 
     // Stop camera stream
     if (videoRef.current && videoRef.current.srcObject) {
@@ -146,8 +129,6 @@ export function useOvershootVision(): UseOvershootVisionReturn {
 
     setIsActive(false)
     console.log('Camera stopped')
-=======
->>>>>>> 21b3fce (Overshoot text updates in dashboard)
   }, [])
 
   // Cleanup on unmount
