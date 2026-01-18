@@ -11,6 +11,11 @@ jobs:
     runs-on: ubuntu-latest
     env:
         OVERSHOOT_KEY: ${{ SECRETS.OVERSHOOT_KEY}}
+        TWILIO_ACCOUNT_SID: ${{ SECRETS.TWILIO_ACCOUNT_SID}}
+        TWILIO_AUTH_TOKEN: ${{ SECRETS.TWILIO_AUTH_TOKEN}}
+        TWILIO_FROM_NUMBER: ${{ SECRETS.TWILIO_FROM_NUMBER}}
+        TWILIO_TO_NUMBER: ${{ SECRETS.TWILIO_TO_NUMBER}}
+
 
     steps:
       - name: Checkout repository
