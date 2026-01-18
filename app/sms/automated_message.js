@@ -1,19 +1,19 @@
-// 1. Install the Twilio library first
-// npm install twilio
-
 const twilio = require('twilio');
 
-// Twilio credentials
-const accountSid = 'ACb96565e1272259b4d301fc4fb35f6ea6'; // Your main Account SID
-const authToken = '35deb071c68feee4f45db00d10c51a87';                 // Your Auth Token
+const accountSid = process.env.TWILIO_ACCOUNT_SID;
+const authToken = process.env.TWILIO_AUTH_TOKEN;
+
+if (!accountSid || !authToken) {
+  throw new Error('Twilio credentials are not set in environment variables');
+}
 
 const client = twilio(accountSid, authToken);
 
 client.messages
   .create({
     body: 'You are about to die...',
-    from: '+18303609592', // Your Twilio number
-    to: '+15198354026'   // Destination number
+    from: process.env.TWILIO_FROM_NUMBER,
+    to: process.env.TWILIO_TO_NUMBER,
   })
   .then(message => console.log(message.sid))
   .catch(error => console.error(error));

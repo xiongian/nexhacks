@@ -1,4 +1,7 @@
 # Logs
+
+footage/
+
 logs
 *.log
 npm-debug.log*
