@@ -12,7 +12,7 @@ export function AISummary({
   description = "Longer description of ongoing danger, namely the cause, person(s), threat level, time of detection" 
 }: AISummaryProps) {
   return (
-    <Card className="h-full flex-[2] basis-2/3 min-h-[30vh]">
+    <Card className="h-full flex-[2] basis-2/3 min-h-[15vh]">
       <CardHeader className="pb-2">
         <CardTitle className="text-base sm:text-lg font-bold">{title}</CardTitle>
       </CardHeader>

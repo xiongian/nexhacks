@@ -31,7 +31,7 @@ export function WarningWidget({
   })
 
   return (
-    <Card className="h-full flex-1 basis-1/3 min-h-[30vh] flex flex-col">
+    <Card className="h-full flex-1 basis-1/3 min-h-[15vh] flex flex-col">
       <CardContent className="flex items-center justify-center h-full flex-1">
         <div className="flex flex-col items-center justify-center">
           <div className={`text-4xl sm:text-5xl font-bold ${colorClass}`}>{level}</div>
