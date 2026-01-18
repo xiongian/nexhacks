@@ -1,3 +1,6 @@
+// added line because environment variables were not loading
+require('dotenv').config();
+
 const twilio = require('twilio');
 
 const accountSid = process.env.TWILIO_ACCOUNT_SID;
@@ -18,8 +21,8 @@ async function sendInitialAlertSMS(dangerLevel, description) {
   const body = `🚨 SECURITY ALERT - Danger Level: ${dangerLevel}\n\n` +
     `Situation: ${description}\n\n` +
     `Reply with:\n` +
-    `"1" for current status and details\n` +
-    `"2" for current camera frame`;
+    `"1" for details\n` +
+    `"2" for image`;
 
   try {
     const message = await client.messages.create({
@@ -92,30 +95,31 @@ async function sendImageResponseSMS() {
   }
 }
 
-/**
- * Legacy function - send a simple test message
- */
-async function sendTestMessage() {
-  try {
-    const message = await client.messages.create({
-      body: 'You are about to die...',
-      from: process.env.TWILIO_FROM_NUMBER,
-      to: process.env.TWILIO_TO_NUMBER,
-    });
-
-    console.log(`[SMS] Test message sent. SID: ${message.sid}`);
-    return message;
-  } catch (error) {
-    console.error('[SMS] Failed to send test message:', error);
-    throw error;
-  }
-}
-
 // Export functions for use in other modules
 module.exports = {
   sendInitialAlertSMS,
   sendStatusResponseSMS,
   sendImageResponseSMS,
-  sendTestMessage,
   client,
 };
+
+
+
+
+//***************************************
+// HARD CODED TESTING - TO BE REMOVED LATER
+//***************************************
+
+if (require.main === module) {
+  (async () => {
+    try {
+      await sendInitialAlertSMS(
+        'LOW',
+        'bomb..'
+      );
+      console.log('Test completed');
+    } catch (e) {
+      console.error(e);
+    }
+  })();
+}
