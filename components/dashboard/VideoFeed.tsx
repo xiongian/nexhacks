@@ -21,7 +21,7 @@ export const VideoFeed = forwardRef<HTMLVideoElement, VideoFeedProps>(
             playsInline
             className="w-full h-full object-cover rounded-2xl"
           />
-          {!isActive && (
+          {!isActive && !streamUrl && (
             <div className="absolute inset-0 flex items-center justify-center bg-black/50 rounded-2xl">
               <span className="text-white text-lg">Camera Inactive</span>
             </div>
