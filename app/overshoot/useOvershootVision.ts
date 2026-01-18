@@ -138,6 +138,23 @@ export function useOvershootVision(): UseOvershootVisionResult {
               setOverallDangerLevel(highestLevel)
               setDangerSince(new Date())
 
+              // Call the SMS alert API endpoint with danger detection data
+              if (parsed.summary) {
+                fetch('/api/sms/alert', {
+                  method: 'POST',
+                  headers: {
+                    'Content-Type': 'application/json',
+                  },
+                  body: JSON.stringify({
+                    dangerLevel: highestLevel,
+                    description: parsed.summary,
+                    personGrid: parsed.grid,
+                  }),
+                }).catch((error) => {
+                  console.error('[Dashboard] Failed to call alert API:', error)
+                })
+              }
+
               return currentSections
             })
           },
