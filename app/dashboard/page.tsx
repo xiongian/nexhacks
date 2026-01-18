@@ -111,9 +111,10 @@ export default function DashboardPage() {
   const [dangerLevel, setDangerLevel] = useState<DangerLevel>("SAFE")
   const [dangerSince, setDangerSince] = useState<Date>(new Date())
   const [isMonitoring, setIsMonitoring] = useState(false)
+  const [remoteStream, setRemoteStream] = useState<MediaStream | null>(null)
 
   useEffect(() => {
-    if (!isMonitoring) {
+    if (!isMonitoring || !remoteStream) {
       return
     }
 
@@ -137,6 +138,9 @@ export default function DashboardPage() {
 
       const { RealtimeVision } = sdkModule
 
+      // Check if RealtimeVision accepts a source option
+      // If it does, we can pass the remote stream directly
+      // Otherwise, it will use the video element with id="camera"
       const instance = new RealtimeVision({
         apiUrl: "https://cluster1.overshoot.ai/api/v0.2",
         apiKey,
@@ -184,7 +188,7 @@ export default function DashboardPage() {
         vision.stop().catch(() => {})
       }
     }
-  }, [isMonitoring])
+  }, [isMonitoring, remoteStream])
 
   return (
     <div className="min-h-screen bg-background p-6 sm:p-8 lg:p-12">
@@ -203,7 +207,10 @@ export default function DashboardPage() {
 
         <div className="flex flex-row gap-4 sm:gap-6 min-h-[60vh]">
           <div className="flex flex-col flex-1 gap-3">
-            <VideoFeed active={isMonitoring} />
+            <VideoFeed 
+              active={isMonitoring} 
+              onStreamReady={(stream) => setRemoteStream(stream)}
+            />
             <button
               type="button"
               onClick={() => setIsMonitoring((value) => !value)}
