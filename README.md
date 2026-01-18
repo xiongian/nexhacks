@@ -1,6 +1,6 @@
 ## Oversafe
 Oversafe is a real-time first responder tool that gives deep insights on victim positioning through CCTV footage.
-![Demo Image](images/nexhacks_demo.png)
+![Demo Image](images/demo.png)
 
 ## Setup
 
