@@ -10,18 +10,8 @@ import type {
 } from "./types"
 
 const OVERSHOOT_PROMPT =
-  'You are monitoring a CCTV feed for safety inside a room. \n\n'
-  'Classify the current situation into a single level using these rules: \n\n'
-  '(1) level = "DANGER" if you see any physical fight, hitting, pushing, shoving, \n\n'
-  'or if anyone is aggressively waving their arms up and down or making frantic, \n\n'
-  'alarming motions, or if there are hands on their neck, or if there is a gun gesture \n\n'
-  'near their head, or if their mouth is moving rapidly with a shocked face, or another person is pushing them; \n\n'
-  '(2) level = "WARNING" if there is no fight, but anyone looks extremely surprised, shocked, or scared (for example wide eyes, \n\n'
-  'hands to face, sudden startled reactions); (3) level = "SAFE" if people appear calm and no one looks surprised, scared, or fighting. \n\n'
-  'Respond ONLY with a single JSON object of the form {"level": "SAFE" | "WARNING" | "DANGER", "summary": string, "points": [[x, y], ...]}. \n\n'
-  'summary must be a short sentence describing what is happening and why that level was chosen. \n\n'
-  'points must be a list of [x, y] coordinates for each person in the scene, where you imagine a bird\'s eye view of the room mapped to a 10 by 10 grid. \n\n'
-  'x and y must be integers between 0 and 9 inclusive, where [0,0] is one corner of the room and [9,9] is the opposite corner.'
+  "Give a 3 part summary, containing a danger level for what is happening furthest, middle, and closet from the camera, in 3 different lines \n\n"
+  "and provide a threat level for each distance from the camera"
 
 const DEFAULT_SUMMARY =
   "Longer description of ongoing danger, namely the cause, person(s), threat level, time of detection\n\n"
