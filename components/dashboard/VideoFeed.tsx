@@ -11,8 +11,8 @@ interface VideoFeedProps {
 export const VideoFeed = forwardRef<HTMLVideoElement, VideoFeedProps>(
   ({ streamUrl, isActive = false }, ref) => {
     return (
-      <Card className="h-full min-h-[60vh] sm:min-h-[60vh] flex-1">
-        <CardContent className="flex items-center justify-center h-full p-0 relative">
+      <Card className="h-full min-h-[60vh] sm:min-h-[60vh] flex-1 flex flex-col">
+        <CardContent className="flex items-center justify-center h-full flex-1 p-0 relative">
           <video
             ref={ref}
             src={streamUrl}

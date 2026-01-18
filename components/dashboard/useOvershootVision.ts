@@ -15,7 +15,7 @@ interface UseOvershootVisionReturn {
   error: string | null
   startVision: () => Promise<void>
   stopVision: () => Promise<void>
-  videoRef: React.RefObject<HTMLVideoElement>
+  videoRef: React.RefObject<HTMLVideoElement | null>
 }
 
 export function useOvershootVision(): UseOvershootVisionReturn {
