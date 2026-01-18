@@ -67,15 +67,22 @@ export function VideoFeed({ active }: VideoFeedProps) {
 
   return (
     <Card className="h-full min-h-[60vh] sm:min-h-[60vh] flex-1">
-      <CardContent className="flex items-center justify-center h-full p-0">
+      <CardContent className="flex items-center justify-center h-full p-0 relative">
         <video
           ref={videoRef}
           id="camera"
           autoPlay
           muted
           playsInline
-          className="w-full h-full object-cover rounded-2xl bg-black"
+          className={`w-full h-full object-cover rounded-2xl ${active ? 'bg-black' : 'bg-transparent'}`}
         />
+        {!active && (
+          <div className="absolute inset-0 flex items-center justify-center">
+            <span className="text-black text-6xl font-bold text-center">
+              Camera Not Recording
+            </span>
+          </div>
+        )}
       </CardContent>
     </Card>
   )
