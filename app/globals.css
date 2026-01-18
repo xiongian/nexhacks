@@ -6,6 +6,7 @@
   --card: #d9d9d9;
   --card-foreground: #000000;
   --danger: #ff7171;
+  --warning: #ffcc00;
   --muted-foreground: #666666;
 }
 
@@ -15,6 +16,7 @@
   --color-card: var(--card);
   --color-card-foreground: var(--card-foreground);
   --color-danger: var(--danger);
+  --color-warning: var(--warning);
   --color-muted-foreground: var(--muted-foreground);
   --font-sans: var(--font-manrope);
 }

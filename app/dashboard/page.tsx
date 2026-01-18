@@ -125,14 +125,32 @@ export default function DashboardPage() {
     }
   }, [])
 
-  // Combine all section grids into one person locator grid
+  // Combine all section grids into one person locator grid with danger levels
   const combinedPersonGrid = Array.from({ length: 10 }, (_, row) =>
     Array.from({ length: 10 }, (_, col) => {
-      return (
-        (sections.closest?.grid?.[row]?.[col] ?? false) ||
-        (sections.middle?.grid?.[row]?.[col] ?? false) ||
-        (sections.farthest?.grid?.[row]?.[col] ?? false)
-      )
+      // Check danger levels in order: DANGER > WARNING > SAFE
+      if (
+        (sections.closest?.grid?.[row]?.[col] && sections.closest.level === "DANGER") ||
+        (sections.middle?.grid?.[row]?.[col] && sections.middle.level === "DANGER") ||
+        (sections.farthest?.grid?.[row]?.[col] && sections.farthest.level === "DANGER")
+      ) {
+        return "DANGER"
+      }
+      if (
+        (sections.closest?.grid?.[row]?.[col] && sections.closest.level === "WARNING") ||
+        (sections.middle?.grid?.[row]?.[col] && sections.middle.level === "WARNING") ||
+        (sections.farthest?.grid?.[row]?.[col] && sections.farthest.level === "WARNING")
+      ) {
+        return "WARNING"
+      }
+      if (
+        (sections.closest?.grid?.[row]?.[col] && sections.closest.level === "SAFE") ||
+        (sections.middle?.grid?.[row]?.[col] && sections.middle.level === "SAFE") ||
+        (sections.farthest?.grid?.[row]?.[col] && sections.farthest.level === "SAFE")
+      ) {
+        return "SAFE"
+      }
+      return null // No person detected
     })
   )
 
