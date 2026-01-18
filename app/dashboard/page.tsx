@@ -187,6 +187,16 @@ export default function DashboardPage() {
     }
   }, [isMonitoring, remoteStream])
 
+  // Combine all section grids for person locator
+  const combinedPersonGrid = sections.farthest?.grid || sections.middle?.grid || sections.closest?.grid ||
+    Array.from({ length: 10 }, () => Array(10).fill(false))
+
+  // Use the first available raw text for AI summary
+  const rawText = sections.farthest?.rawText || sections.middle?.rawText || sections.closest?.rawText || ""
+
+  // Use overall danger level
+  const dangerLevel = overallDangerLevel
+
   return (
     <div className="min-h-screen bg-background p-6 sm:p-8 lg:p-12">
       <div className="max-w-6xl mx-auto">
@@ -216,7 +226,7 @@ export default function DashboardPage() {
               {isMonitoring ? "Stop Monitoring" : "Start Monitoring"}
             </button>
           </div>
-          <PersonLocator grid={personGrid} />
+          <PersonLocator grid={combinedPersonGrid} />
         </div>
       </div>
     </div>
