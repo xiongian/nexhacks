@@ -1,9 +1,2 @@
-export function setupCounter(element: HTMLButtonElement) {
-  let counter = 0
-  const setCounter = (count: number) => {
-    counter = count
-    element.innerHTML = `count is ${counter}`
-  }
-  element.addEventListener('click', () => setCounter(counter + 1))
-  setCounter(0)
-}
+// Boilerplate counter function - not used in the refactored implementation
+// The vision functionality has been moved to the React dashboard
