@@ -1,5 +1,5 @@
-## Oversafe
-Oversafe is a real-time first responder tool that gives deep insights on victim positioning through CCTV footage.
+## Watchdog
+Watchdog is a real-time first responder tool that gives deep insights on victim positioning presented as danger zones on a bird's eye view map based on CCTV footage.
 ![Demo Image](images/demo.png)
 
 ## Setup

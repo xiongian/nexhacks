@@ -8,7 +8,7 @@ const manrope = Manrope({
 });
 
 export const metadata: Metadata = {
-  title: "Oversafe",
+  title: "Watchdog",
   description: "Security Analyzer Dashboard",
 };
 
