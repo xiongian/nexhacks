@@ -9,16 +9,23 @@ import type {
   OvershootVisionInstance,
 } from "./types"
 
-const createSectionPrompt = (section: string) =>
-  `You are monitoring a CCTV feed inside a room, focusing on the ${section} section from the camera.
+const createSectionPrompt = (section: string) => {
+  const rowMapping = {
+    farthest: "rows 0-2",
+    middle: "rows 3-5",
+    closest: "rows 6-9"
+  }[section] || "rows 0-9"
+
+  return `You are monitoring a CCTV feed inside a room, focusing on the ${section} section from the camera.
 
 Level = "DANGER" if there is any physical fight, aggressive gestures (hitting, pushing, frantic arm movements), hands on neck, gun-like gesture near head, or distress caused by another person; "WARNING" if no fight but someone appears shocked or scared; "SAFE" if everyone is calm.
 
 Respond ONLY with a JSON object: {"level": "SAFE" | "WARNING" | "DANGER", "summary": string, "points": [[x, y], ...]} explaining the choice.
 
-Points are integer coordinates (0–9) for each person on a 10×10 bird's-eye grid of the room, focusing on the ${section} section.
+Points are integer coordinates (0–9) for each person on a 10×10 bird's-eye grid of the room, focusing on the ${section} section. Map coordinates to ${rowMapping}.
 
 Focus your assessment ONLY on the ${section} section from the camera.`
+}
 
 const SECTION_PROMPTS = {
   farthest: createSectionPrompt("farthest"),
@@ -137,23 +144,6 @@ export function useOvershootVision(): UseOvershootVisionResult {
 
               setOverallDangerLevel(highestLevel)
               setDangerSince(new Date())
-
-              // Call the SMS alert API endpoint with danger detection data
-              if (parsed.summary) {
-                fetch('/api/sms/alert', {
-                  method: 'POST',
-                  headers: {
-                    'Content-Type': 'application/json',
-                  },
-                  body: JSON.stringify({
-                    dangerLevel: highestLevel,
-                    description: parsed.summary,
-                    personGrid: parsed.grid,
-                  }),
-                }).catch((error) => {
-                  console.error('[Dashboard] Failed to call alert API:', error)
-                })
-              }
 
               return currentSections
             })

@@ -125,31 +125,42 @@ export default function DashboardPage() {
     }
   }, [])
 
-  // Combine all section grids into one person locator grid with danger levels
+  // Map medium or high level dangers directly to the 10x10 grid coordinates
   const combinedPersonGrid = Array.from({ length: 10 }, (_, row) =>
     Array.from({ length: 10 }, (_, col) => {
-      // Check danger levels in order: DANGER > WARNING > SAFE
-      if (
-        (sections.closest?.grid?.[row]?.[col] && sections.closest.level === "DANGER") ||
-        (sections.middle?.grid?.[row]?.[col] && sections.middle.level === "DANGER") ||
-        (sections.farthest?.grid?.[row]?.[col] && sections.farthest.level === "DANGER")
-      ) {
+      // Check for DANGER level first (highest priority)
+      if (sections.closest?.grid?.[row]?.[col] && sections.closest.level === "DANGER") {
         return "DANGER"
       }
-      if (
-        (sections.closest?.grid?.[row]?.[col] && sections.closest.level === "WARNING") ||
-        (sections.middle?.grid?.[row]?.[col] && sections.middle.level === "WARNING") ||
-        (sections.farthest?.grid?.[row]?.[col] && sections.farthest.level === "WARNING")
-      ) {
+      if (sections.middle?.grid?.[row]?.[col] && sections.middle.level === "DANGER") {
+        return "DANGER"
+      }
+      if (sections.farthest?.grid?.[row]?.[col] && sections.farthest.level === "DANGER") {
+        return "DANGER"
+      }
+
+      // Check for WARNING level (medium priority)
+      if (sections.closest?.grid?.[row]?.[col] && sections.closest.level === "WARNING") {
         return "WARNING"
       }
-      if (
-        (sections.closest?.grid?.[row]?.[col] && sections.closest.level === "SAFE") ||
-        (sections.middle?.grid?.[row]?.[col] && sections.middle.level === "SAFE") ||
-        (sections.farthest?.grid?.[row]?.[col] && sections.farthest.level === "SAFE")
-      ) {
+      if (sections.middle?.grid?.[row]?.[col] && sections.middle.level === "WARNING") {
+        return "WARNING"
+      }
+      if (sections.farthest?.grid?.[row]?.[col] && sections.farthest.level === "WARNING") {
+        return "WARNING"
+      }
+
+      // Check for SAFE level (lowest priority, only if person detected)
+      if (sections.closest?.grid?.[row]?.[col] && sections.closest.level === "SAFE") {
         return "SAFE"
       }
+      if (sections.middle?.grid?.[row]?.[col] && sections.middle.level === "SAFE") {
+        return "SAFE"
+      }
+      if (sections.farthest?.grid?.[row]?.[col] && sections.farthest.level === "SAFE") {
+        return "SAFE"
+      }
+
       return null // No person detected
     })
   )
