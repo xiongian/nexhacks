@@ -16,6 +16,7 @@ export default function DashboardPage() {
     dangerSince,
     isMonitoring,
     setIsMonitoring,
+    rawText,
   } = useOvershootVision()
 
   return (
@@ -29,7 +30,7 @@ export default function DashboardPage() {
           <WarningWidget level={dangerLevel} since={dangerSince} />
           <AISummary
             title="AI Summary of Ongoing Situation"
-            description={summaryDescription}
+            parsed={{ text: rawText }}
           />
         </div>
 

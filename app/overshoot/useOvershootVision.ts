@@ -35,6 +35,7 @@ type UseOvershootVisionResult = {
   dangerSince: Date
   isMonitoring: boolean
   setIsMonitoring: (value: boolean | ((prev: boolean) => boolean)) => void
+  rawText: string
 }
 
 export function useOvershootVision(): UseOvershootVisionResult {
@@ -45,6 +46,7 @@ export function useOvershootVision(): UseOvershootVisionResult {
   const [dangerLevel, setDangerLevel] = useState<DangerLevel>("SAFE")
   const [dangerSince, setDangerSince] = useState<Date>(new Date())
   const [isMonitoring, setIsMonitoring] = useState(false)
+  const [rawText, setRawText] = useState("")
 
   useEffect(() => {
     if (!isMonitoring) {
@@ -87,6 +89,8 @@ export function useOvershootVision(): UseOvershootVisionResult {
             return
           }
 
+          setRawText(text)
+
           const parsed = parseOvershootResult(text)
 
           if (!parsed) {
@@ -126,5 +130,6 @@ export function useOvershootVision(): UseOvershootVisionResult {
     dangerSince,
     isMonitoring,
     setIsMonitoring,
+    rawText,
   }
 }
