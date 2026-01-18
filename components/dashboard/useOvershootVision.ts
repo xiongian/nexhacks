@@ -82,7 +82,7 @@ export function useOvershootVision(): UseOvershootVisionReturn {
         apiUrl: 'https://cluster1.overshoot.ai/api/v0.2',
         apiKey: 'ovs_8ecb8c7d11ea73ef6b99395c4c48fc9f',
         prompt: 'Describe the danger on a scale of 1 to 10. Increase score if sudden movements.',
-        videoElement: videoRef.current,
+
         onResult: (result) => {
           const text = result.result || "No text detected"
           const dangerLevel = extractDangerLevel(text)
