@@ -1,7 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-
-// In-memory store for video frames (in production, use Redis or similar)
-const frameStore = new Map<string, { imageData: string; timestamp: number }>();
+import { setFrame } from '../store';
 
 export async function POST(request: NextRequest) {
   try {
@@ -13,15 +11,7 @@ export async function POST(request: NextRequest) {
     }
 
     const id = cameraId || 'default';
-    frameStore.set(id, { imageData, timestamp: timestamp || Date.now() });
-
-    // Clean up old frames (older than 5 seconds)
-    const now = Date.now();
-    for (const [key, value] of frameStore.entries()) {
-      if (now - value.timestamp > 5000) {
-        frameStore.delete(key);
-      }
-    }
+    setFrame(id, imageData, timestamp || Date.now());
 
     return NextResponse.json({ success: true });
   } catch (error) {

@@ -15,6 +15,8 @@ export function VideoFeed({ active, onStreamReady }: VideoFeedProps) {
   const streamRef = useRef<MediaStream | null>(null)
   const pollIntervalRef = useRef<number | null>(null)
   const lastFrameTimestampRef = useRef<number>(0)
+  const streamCreatedRef = useRef<boolean>(false)
+  const canvasInitializedRef = useRef<boolean>(false)
   const [isConnected, setIsConnected] = useState(false)
   const [hasCamera, setHasCamera] = useState(false)
 
@@ -31,6 +33,8 @@ export function VideoFeed({ active, onStreamReady }: VideoFeedProps) {
       if (videoRef.current) {
         videoRef.current.srcObject = null
       }
+      canvasInitializedRef.current = false
+      streamCreatedRef.current = false
       setIsConnected(false)
       setHasCamera(false)
       return
@@ -66,22 +70,63 @@ export function VideoFeed({ active, onStreamReady }: VideoFeedProps) {
             const ctx = canvas.getContext("2d")
             if (!ctx) return
 
+            // Create new image for each frame
             const img = new Image()
+            img.crossOrigin = "anonymous"
+            
+            // Set up load handler - this runs when image loads
             img.onload = () => {
               if (cancelled) return
 
-              canvas.width = img.width
-              canvas.height = img.height
-              ctx.drawImage(img, 0, 0)
-
-              // Create a MediaStream from canvas for Overshoot SDK
-              if (!streamRef.current && canvas.captureStream) {
-                const stream = canvas.captureStream(30) // 30 FPS
-                streamRef.current = stream
-                video.srcObject = stream
-                onStreamReady?.(stream)
+              // Initialize canvas dimensions only once on first frame
+              if (!canvasInitializedRef.current) {
+                const targetWidth = img.width || 1280
+                const targetHeight = img.height || 720
+                canvas.width = targetWidth
+                canvas.height = targetHeight
+                canvasInitializedRef.current = true
+                
+                // Ensure canvas is visible and has proper styling
+                canvas.style.display = 'block'
+                canvas.style.width = '100%'
+                canvas.style.height = '100%'
+                canvas.style.objectFit = 'cover'
+              }
+              
+              // CRITICAL: Draw the image to canvas on EVERY frame
+              // This must happen for every frame that loads, not just the first one
+              ctx.drawImage(img, 0, 0, canvas.width, canvas.height)
+              
+              // Create a MediaStream from canvas for Overshoot SDK (only once, after first draw)
+              if (!streamCreatedRef.current && canvas.captureStream && video && canvas.width > 0 && canvas.height > 0) {
+                try {
+                  const stream = canvas.captureStream(30) // 30 FPS
+                  streamRef.current = stream
+                  streamCreatedRef.current = true
+                  
+                  // Set the stream on video element for SDK
+                  video.srcObject = stream
+                  
+                  // Try playing video (for SDK, even though it's hidden)
+                  video.play().catch((err) => {
+                    if (err.name !== 'AbortError' && err.name !== 'NotAllowedError') {
+                      console.error("Error playing video for SDK:", err)
+                    }
+                  })
+                  
+                  // Notify parent that stream is ready - this starts the Overshoot SDK
+                  onStreamReady?.(stream)
+                } catch (err) {
+                  console.error("Error creating canvas stream for SDK:", err)
+                }
               }
             }
+            
+            img.onerror = (err) => {
+              console.error("Error loading image frame:", err)
+            }
+            
+            // Load the image - this triggers onload when ready
             img.src = data.frame.imageData
           }
         } else {
@@ -116,7 +161,7 @@ export function VideoFeed({ active, onStreamReady }: VideoFeedProps) {
         videoRef.current.srcObject = null
       }
     }
-  }, [active, onStreamReady, hasCamera])
+  }, [active, onStreamReady])
 
   return (
     <Card className="h-full min-h-[60vh] sm:min-h-[60vh] flex-1">
@@ -133,8 +178,21 @@ export function VideoFeed({ active, onStreamReady }: VideoFeedProps) {
           muted
           playsInline
           className="w-full h-full object-cover rounded-2xl bg-black"
+          style={{ 
+            backgroundColor: '#000',
+            display: 'none' // Hidden - only used by Overshoot SDK
+          }}
         />
-        <canvas ref={canvasRef} className="hidden" />
+        <canvas 
+          ref={canvasRef} 
+          className="w-full h-full object-cover rounded-2xl bg-black"
+          style={{ 
+            display: 'block',
+            width: '100%',
+            height: '100%',
+            backgroundColor: '#000'
+          }}
+        />
       </CardContent>
     </Card>
   )

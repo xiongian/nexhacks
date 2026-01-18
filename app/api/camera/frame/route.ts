@@ -1,14 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
-
-// In-memory store for video frames
-const frameStore = new Map<string, { imageData: string; timestamp: number }>();
+import { getFrame, setFrame } from '../store';
 
 export async function GET(request: NextRequest) {
   try {
     const searchParams = request.nextUrl.searchParams;
     const cameraId = searchParams.get('cameraId') || 'default';
 
-    const frame = frameStore.get(cameraId);
+    const frame = getFrame(cameraId);
 
     if (!frame) {
       return NextResponse.json({ frame: null }, { status: 200 });
@@ -37,15 +35,7 @@ export async function POST(request: NextRequest) {
     }
 
     const id = cameraId || 'default';
-    frameStore.set(id, { imageData, timestamp: timestamp || Date.now() });
-
-    // Clean up old frames (older than 5 seconds)
-    const now = Date.now();
-    for (const [key, value] of frameStore.entries()) {
-      if (now - value.timestamp > 5000) {
-        frameStore.delete(key);
-      }
-    }
+    setFrame(id, imageData, timestamp || Date.now());
 
     return NextResponse.json({ success: true });
   } catch (error) {
