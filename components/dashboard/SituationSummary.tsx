@@ -11,6 +11,7 @@ export function AISummary({
   title = "AI Brief Summary of What's going",
   parsed
 }: AISummaryProps) {
+
   return (
     <Card className="h-full flex-[2] basis-2/3 min-h-[30vh]">
       <CardHeader className="pb-2">

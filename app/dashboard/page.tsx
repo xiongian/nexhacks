@@ -187,15 +187,8 @@ export default function DashboardPage() {
     }
   }, [isMonitoring, remoteStream])
 
-  // Combine all section grids for person locator
-  const combinedPersonGrid = sections.farthest?.grid || sections.middle?.grid || sections.closest?.grid ||
-    Array.from({ length: 10 }, () => Array(10).fill(false))
-
-  // Use the first available raw text for AI summary
-  const rawText = sections.farthest?.rawText || sections.middle?.rawText || sections.closest?.rawText || ""
-
-  // Use overall danger level
-  const dangerLevel = overallDangerLevel
+  // Use person grid from state for person locator
+  const combinedPersonGrid = personGrid
 
   return (
     <div className="min-h-screen bg-background p-6 sm:p-8 lg:p-12">
@@ -208,7 +201,7 @@ export default function DashboardPage() {
           <WarningWidget level={dangerLevel} since={dangerSince} />
           <AISummary
             title="AI Brief Summary of What's going"
-            description={summaryDescription}
+            parsed={{ text: summaryDescription }}
           />
         </div>
 
