@@ -168,7 +168,7 @@ export function VideoFeed({ active, onStreamReady }: VideoFeedProps) {
       <CardContent className="flex items-center justify-center h-full p-0 relative">
         {!hasCamera && (
           <div className="absolute inset-0 flex items-center justify-center bg-black/50 rounded-2xl z-10">
-            <p className="text-foreground">Waiting for camera device... Open /camera on another device</p>
+            <p className="text-white text-xl font-extrabold">Camera Disabled, Video Feed Paused</p>
           </div>
         )}
         <video
