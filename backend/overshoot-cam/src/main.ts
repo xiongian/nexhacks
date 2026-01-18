@@ -1,32 +1,50 @@
 import { RealtimeVision } from '@overshoot/sdk';
 
-const video = document.getElementById('camera') as HTMLVideoElement;
-const output = document.getElementById('output') as HTMLDivElement;
+const videoEl = document.getElementById('video') as HTMLVideoElement;
+const output = document.getElementById('output') as HTMLPreElement;
 
-const vision = new RealtimeVision({
-  apiUrl: 'https://cluster1.overshoot.ai/api/v0.2',
-  apiKey: 'ovs_8ecb8c7d11ea73ef6b99395c4c48fc9f',  // <-- replace with your key
-  prompt: 'Describe the danger on a scale of 1 to 10. Increase score if sudden movements.',
-  // Attach the video element so Overshoot can use it
-  videoElement: video,
-  onResult: (result) => {
-    output.textContent = result.result || "No text detected";
-    console.log('Overshoot result:', result.result);
+async function loadVideoFile(): Promise<File> {
+  const response = await fetch('/footage/vid_1.mp4');
+  if (!response.ok) {
+    throw new Error('Failed to load video file');
   }
-});
 
-async function startVision() {
-  try {
-    await vision.start();
-    console.log('Camera & vision started');
-  } catch (err) {
-    console.error('Error starting vision:', err);
-  }
+  const blob = await response.blob();
+
+  return new File([blob], 'vid_4.mp4', {
+    type: 'video/mp4'
+  });
 }
 
-async function stopVision() {
-  await vision.stop();
-  console.log('Camera stopped');
+async function run() {
+  // added
+  videoEl.src = '/footage/vid_4.mp4';
+  videoEl.muted = true;          // allow autoplay
+  videoEl.playsInline = true;
+  await videoEl.play();
+
+
+  const videoFile = await loadVideoFile();
+
+  const vision = new RealtimeVision({
+    apiUrl: 'https://cluster1.overshoot.ai/api/v0.2',
+    apiKey: 'ovs_8ecb8c7d11ea73ef6b99395c4c48fc9f',
+    prompt: 'Map the scene to a 10 by 10 two dimensional grid and output sets of points representing the coordinates of each person walking',
+    source: {
+      type: 'video',
+      file: videoFile
+    },
+    onResult: (result) => {
+      console.log('RESULT:', result.result);
+      output.textContent = JSON.stringify(result.result, null, 2);
+    },
+    onError: (err) => {
+      console.error('ERROR:', err);
+      output.textContent = String(err);
+    }
+  });
+
+ await vision.start();
 }
 
-startVision();
+run();

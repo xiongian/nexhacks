@@ -2,37 +2,14 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Overshoot Realtime Vision</title>
-  <style>
-    #container {
-      position: relative;
-      width: 640px;
-      height: 480px;
-    }
-    #camera {
-      width: 100%;
-      height: 100%;
-    }
-    #output {
-      position: absolute;
-      top: 0;
-      left: 0;
-      color: lime;
-      background: rgba(0,0,0,0.5);
-      font-size: 18px;
-      padding: 4px;
-      max-width: 100%;
-      overflow-wrap: break-word;
-    }
-  </style>
+  <title>Overshoot Video Analysis</title>
 </head>
 <body>
-  <h1>Overshoot Realtime Vision</h1>
-  <div id="container">
-    <video id="camera" autoplay playsinline></video>
-    <div id="output">Waiting for results...</div>
-  </div>
+  <h1>Overshoot MP4 Analysis</h1>
+
+  <video id="video" controls muted playsinline width="640"></video>
+  <pre id="output">Waiting…</pre>
+
   <script type="module" src="/src/main.ts"></script>
 </body>
 </html>
