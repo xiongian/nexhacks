@@ -9,6 +9,7 @@ import type {
   OvershootVisionInstance,
 } from "./types"
 
+
 const createSectionPrompt = (section: string) =>
   `You are monitoring a CCTV feed inside a room, focusing on the ${section} section from the camera.
 

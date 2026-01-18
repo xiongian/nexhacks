@@ -1,3 +1,5 @@
+console.log('[SMS MODULE] Loaded at', new Date().toISOString());
+
 // added line because environment variables were not loading
 require('dotenv').config();
 

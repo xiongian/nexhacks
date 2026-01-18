@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { initializeState, updateDangerLevel, shouldTriggerAlert, isThrottled, recordAlertSent } from '@/app/sms/smsState';
-import { sendInitialAlertSMS } from '@/app/sms/automated_message';
+import smsModule from '@/app/sms/automated_message';
+
+export const runtime = 'nodejs';
 
 export async function POST(request: NextRequest) {
   try {
@@ -28,8 +30,7 @@ export async function POST(request: NextRequest) {
     // Check if we should send an alert
     if (shouldTriggerAlert() && !isThrottled()) {
       try {
-        // Send the initial alert SMS
-        await sendInitialAlertSMS(dangerLevel, description);
+        await smsModule.sendInitialAlertSMS(dangerLevel, description);
 
         // Record that we sent an alert
         recordAlertSent(dangerLevel, description, 'initial');

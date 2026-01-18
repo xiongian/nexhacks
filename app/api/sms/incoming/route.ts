@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { initializeState, recordAlertSent, getState } from '@/app/sms/smsState';
-import { sendStatusResponseSMS, sendImageResponseSMS } from '@/app/sms/automated_message';
+import smsModule from '@/app/sms/automated_message';
+
+export const runtime = 'nodejs';
 
 /**
  * Webhook to receive incoming SMS messages from Twilio
@@ -34,7 +36,7 @@ export async function POST(request: NextRequest) {
       console.log('[SMS Incoming] User requested status (response 1)');
       try {
         const state = getState();
-        await sendStatusResponseSMS(state.lastDangerLevel || 'UNKNOWN', '');
+        await smsModule.sendStatusResponseSMS(state.lastDangerLevel || 'UNKNOWN', '');
         recordAlertSent(state.lastDangerLevel || 'UNKNOWN', 'Status requested by user', 'response_1');
         return new NextResponse('', { status: 200 });
       } catch (error) {
@@ -46,7 +48,7 @@ export async function POST(request: NextRequest) {
       console.log('[SMS Incoming] User requested image (response 2)');
       try {
         const state = getState();
-        await sendImageResponseSMS();
+        await smsModule.sendImageResponseSMS();
         recordAlertSent(state.lastDangerLevel || 'UNKNOWN', 'Image requested by user', 'response_2');
         return new NextResponse('', { status: 200 });
       } catch (error) {
