@@ -59,30 +59,12 @@ export function useOvershootVision(): UseOvershootVisionReturn {
 
     try {
       setError(null)
-
-      // Get camera access first
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: { width: 640, height: 480, facingMode: 'user' },
-        audio: false
-      })
-
-      // Set the video element source to the camera stream
-      videoRef.current.srcObject = stream
-      videoRef.current.muted = true
-
-      // Wait for the video to be ready
-      await new Promise((resolve) => {
-        if (videoRef.current) {
-          videoRef.current.onloadedmetadata = () => resolve(void 0)
-        }
-      })
-
       // Initialize vision with the same configuration as the backend
       const vision = new RealtimeVision({
         apiUrl: 'https://cluster1.overshoot.ai/api/v0.2',
         apiKey: 'ovs_8ecb8c7d11ea73ef6b99395c4c48fc9f',
         prompt: 'Describe the danger on a scale of 1 to 10. Increase score if sudden movements.',
-
+        videoElement: videoRef.current,
         onResult: (result) => {
           const text = result.result || "No text detected"
           const dangerLevel = extractDangerLevel(text)
@@ -114,21 +96,12 @@ export function useOvershootVision(): UseOvershootVisionReturn {
     if (visionRef.current) {
       try {
         await visionRef.current.stop()
-        console.log('Vision analysis stopped')
+        setIsActive(false)
+        console.log('Camera stopped')
       } catch (err) {
         console.error('Error stopping vision:', err)
       }
     }
-
-    // Stop camera stream
-    if (videoRef.current && videoRef.current.srcObject) {
-      const stream = videoRef.current.srcObject as MediaStream
-      stream.getTracks().forEach(track => track.stop())
-      videoRef.current.srcObject = null
-    }
-
-    setIsActive(false)
-    console.log('Camera stopped')
   }, [])
 
   // Cleanup on unmount
