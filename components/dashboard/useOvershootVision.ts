@@ -60,6 +60,23 @@ export function useOvershootVision(): UseOvershootVisionReturn {
     try {
       setError(null)
 
+      // Get camera access first
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { width: 640, height: 480, facingMode: 'user' },
+        audio: false
+      })
+
+      // Set the video element source to the camera stream
+      videoRef.current.srcObject = stream
+      videoRef.current.muted = true
+
+      // Wait for the video to be ready
+      await new Promise((resolve) => {
+        if (videoRef.current) {
+          videoRef.current.onloadedmetadata = () => resolve(void 0)
+        }
+      })
+
       // Initialize vision with the same configuration as the backend
       const vision = new RealtimeVision({
         apiUrl: 'https://cluster1.overshoot.ai/api/v0.2',
@@ -97,12 +114,21 @@ export function useOvershootVision(): UseOvershootVisionReturn {
     if (visionRef.current) {
       try {
         await visionRef.current.stop()
-        setIsActive(false)
-        console.log('Camera stopped')
+        console.log('Vision analysis stopped')
       } catch (err) {
         console.error('Error stopping vision:', err)
       }
     }
+
+    // Stop camera stream
+    if (videoRef.current && videoRef.current.srcObject) {
+      const stream = videoRef.current.srcObject as MediaStream
+      stream.getTracks().forEach(track => track.stop())
+      videoRef.current.srcObject = null
+    }
+
+    setIsActive(false)
+    console.log('Camera stopped')
   }, [])
 
   // Cleanup on unmount
