@@ -138,9 +138,6 @@ export default function DashboardPage() {
 
       const { RealtimeVision } = sdkModule
 
-      // Check if RealtimeVision accepts a source option
-      // If it does, we can pass the remote stream directly
-      // Otherwise, it will use the video element with id="camera"
       const instance = new RealtimeVision({
         apiUrl: "https://cluster1.overshoot.ai/api/v0.2",
         apiKey,
