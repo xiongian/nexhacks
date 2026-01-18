@@ -28,7 +28,7 @@ export default function DashboardPage() {
         <div className="flex flex-row gap-4 sm:gap-6 mb-4 sm:mb-6 min-h-[30vh]">
           <WarningWidget level={dangerLevel} since={dangerSince} />
           <AISummary
-            title="AI Brief Summary of What's going"
+            title="AI Summary of Ongoing Situation"
             description={summaryDescription}
           />
         </div>
