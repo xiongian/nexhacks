@@ -276,4 +276,77 @@ Test 3: Frame Retrieval
 
 ---
 
+### Video Feed Display Bug Fixes
+
+**Files Modified:**
+- `components/dashboard/VideoFeed.tsx`
+- `app/dashboard/page.tsx`
+
+**Purpose:**  
+Fixed issues preventing the camera stream from displaying in the VideoFeed component.
+
+#### Issues Identified & Fixed:
+
+**1. Missing Dependency in useEffect (VideoFeed.tsx)**
+- **Problem:** The `hasCamera` state was used inside `pollForFrames` but wasn't in the useEffect dependency array, causing stale closure issues.
+- **Fix:** Added `hasCamera` to the dependency array.
+
+**2. Canvas Had No Initial Dimensions (VideoFeed.tsx)**
+- **Problem:** The canvas started with 0x0 dimensions and only got sized on first frame load. An unsized canvas displays nothing.
+- **Fix:** Added explicit `width={1280}` and `height={720}` attributes to the canvas element, plus `objectFit: 'cover'` for proper scaling.
+
+**3. Video Timing Issue (dashboard/page.tsx)**
+- **Problem:** The frame capture loop started before the video element had loaded metadata, so `videoWidth`/`videoHeight` were 0.
+- **Fix:** Added `waitForVideo()` function that waits for `loadedmetadata` event before starting frame capture.
+
+**4. Added Dashboard Logging (dashboard/page.tsx)**
+- Added `[DASHBOARD]` prefixed console logs throughout the camera streaming logic to trace:
+  - Camera access request and grant
+  - Video metadata loading
+  - Canvas dimension setup
+  - Frame capture and upload (every 30th frame)
+
+**Code Changes Summary:**
+
+```tsx
+// VideoFeed.tsx - Canvas now has initial dimensions
+<canvas 
+  ref={canvasRef} 
+  width={1280}
+  height={720}
+  style={{ 
+    objectFit: 'cover',
+    // ...
+  }}
+/>
+
+// VideoFeed.tsx - Fixed dependency array
+}, [active, onStreamReady, hasCamera])
+
+// dashboard/page.tsx - Wait for video before capture
+const waitForVideo = () => {
+  return new Promise<void>((resolve) => {
+    if (video.videoWidth && video.videoHeight) {
+      resolve()
+      return
+    }
+    video.onloadedmetadata = () => resolve()
+    video.play().catch(() => {})
+  })
+}
+await waitForVideo()
+```
+
+**New Dashboard Logs:**
+| Log Message | Meaning |
+|-------------|---------|
+| `[DASHBOARD] Starting camera streaming...` | Monitoring activated |
+| `[DASHBOARD] Requesting camera access...` | getUserMedia called |
+| `[DASHBOARD] Camera access granted` | Stream obtained |
+| `[DASHBOARD] Video metadata loaded` | Video dimensions available |
+| `[DASHBOARD] Canvas dimensions set` | Ready to capture |
+| `[DASHBOARD] Frame #N uploaded` | Every 30th frame (success) |
+
+---
+
 *Last Updated: January 25, 2026*

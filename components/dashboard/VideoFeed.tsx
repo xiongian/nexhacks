@@ -268,11 +268,11 @@ export function VideoFeed({ active, onStreamReady }: VideoFeedProps) {
         videoRef.current.srcObject = null
       }
     }
-  }, [active, onStreamReady])
+  }, [active, onStreamReady, hasCamera])
 
   return (
     <Card className="h-full min-h-[60vh] sm:min-h-[60vh] flex-1">
-      <CardContent className="flex items-center justify-center h-full p-0 relative">
+      <CardContent className="flex items-center justify-center h-full p-0 relative overflow-hidden">
         {!hasCamera && (
           <div className="absolute inset-0 flex items-center justify-center bg-black/50 rounded-2xl z-10">
             <p className="text-white text-xl font-extrabold">Camera Disabled, Video Feed Paused</p>
@@ -293,10 +293,13 @@ export function VideoFeed({ active, onStreamReady }: VideoFeedProps) {
         <canvas 
           ref={canvasRef} 
           className="w-full h-full object-cover rounded-2xl bg-black"
+          width={1280}
+          height={720}
           style={{ 
             display: 'block',
             width: '100%',
             height: '100%',
+            objectFit: 'cover',
             backgroundColor: '#000'
           }}
         />

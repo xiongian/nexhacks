@@ -44,15 +44,21 @@ export default function DashboardPage() {
 
     // Start camera streaming
     const startCameraStreaming = async () => {
+      console.log('[DASHBOARD] Starting camera streaming...')
+      
       if (!navigator.mediaDevices?.getUserMedia) {
-        console.error("Camera not available")
+        console.error("[DASHBOARD] Camera not available - getUserMedia not supported")
         return
       }
 
       try {
+        console.log('[DASHBOARD] Requesting camera access...')
         const stream = await navigator.mediaDevices.getUserMedia({
           video: { width: 1280, height: 720 },
           audio: false,
+        })
+        console.log('[DASHBOARD] Camera access granted', { 
+          tracks: stream.getTracks().map(t => ({ kind: t.kind, label: t.label }))
         })
 
         streamRef.current = stream
@@ -60,33 +66,74 @@ export default function DashboardPage() {
 
         if (videoRef.current) {
           videoRef.current.srcObject = stream
+          console.log('[DASHBOARD] Stream attached to video element')
+          
+          // Wait for video to be ready before capturing frames
+          videoRef.current.onloadedmetadata = () => {
+            console.log('[DASHBOARD] Video metadata loaded', {
+              videoWidth: videoRef.current?.videoWidth,
+              videoHeight: videoRef.current?.videoHeight
+            })
+          }
         }
 
         // Setup canvas for frame capture
         const canvas = canvasRef.current
-        if (!canvas) return
+        if (!canvas) {
+          console.error('[DASHBOARD] Canvas ref is null')
+          return
+        }
 
         const video = videoRef.current
-        if (!video) return
+        if (!video) {
+          console.error('[DASHBOARD] Video ref is null')
+          return
+        }
 
+        // Wait for video to have dimensions
+        const waitForVideo = () => {
+          return new Promise<void>((resolve) => {
+            if (video.videoWidth && video.videoHeight) {
+              resolve()
+              return
+            }
+            video.onloadedmetadata = () => resolve()
+            // Also try playing the video
+            video.play().catch(() => {})
+          })
+        }
+        
+        await waitForVideo()
+        
         canvas.width = video.videoWidth || 1280
         canvas.height = video.videoHeight || 720
+        console.log('[DASHBOARD] Canvas dimensions set', { 
+          width: canvas.width, 
+          height: canvas.height 
+        })
 
         const ctx = canvas.getContext("2d")
-        if (!ctx) return
+        if (!ctx) {
+          console.error('[DASHBOARD] Could not get canvas 2d context')
+          return
+        }
 
+        let frameCount = 0
+        
         // Capture and send frames via API
         const sendFrame = async () => {
           if (!video.videoWidth || !video.videoHeight) {
+            console.log('[DASHBOARD] Waiting for video dimensions...')
             frameIntervalRef.current = requestAnimationFrame(sendFrame)
             return
           }
 
           ctx.drawImage(video, 0, 0, canvas.width, canvas.height)
           const imageData = canvas.toDataURL("image/jpeg", 0.7)
+          frameCount++
 
           try {
-            await fetch("/api/camera/upload", {
+            const response = await fetch("/api/camera/upload", {
               method: "POST",
               headers: {
                 "Content-Type": "application/json",
@@ -97,16 +144,25 @@ export default function DashboardPage() {
                 cameraId: "default",
               }),
             })
+            
+            // Log every 30th frame
+            if (frameCount % 30 === 1) {
+              console.log(`[DASHBOARD] Frame #${frameCount} uploaded`, {
+                status: response.status,
+                imageDataLength: imageData.length
+              })
+            }
           } catch (error) {
-            console.error("Error sending frame:", error)
+            console.error("[DASHBOARD] Error sending frame:", error)
           }
 
           frameIntervalRef.current = requestAnimationFrame(sendFrame)
         }
 
+        console.log('[DASHBOARD] Starting frame capture loop')
         sendFrame()
       } catch (error) {
-        console.error("Error accessing camera:", error)
+        console.error("[DASHBOARD] Error accessing camera:", error)
       }
     }
 
