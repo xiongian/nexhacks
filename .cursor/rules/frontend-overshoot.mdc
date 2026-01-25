@@ -1,0 +1,97 @@
+---
+description: React and Overshoot vision integration rules - useOvershootVision hook is canonical for AI polling
+globs:
+  - app/overshoot/**/*
+  - app/**/*.tsx
+  - components/**/*.tsx
+---
+
+# React / Overshoot Vision Rules
+
+## Critical Rules
+
+- **Canonical hook**: `useOvershootVision` in `app/overshoot/useOvershootVision.ts` is the canonical hook for Overshoot AI polling. New code should reuse or extend it, not duplicate its loop.
+
+- **Hook responsibilities**: The hook is responsible for:
+  - Calling `/api/sms/alert` after updating local danger state
+  - Logging errors but never throwing in the polling loop
+  - Managing the 1-2 second polling cadence
+
+- **UI performance**: Any UI changes must not block or slow down the 1-2 second polling cadence:
+  - Don't add heavy computations in render cycles
+  - Don't add blocking API calls in components that Overshoot depends on
+  - Keep video frame processing efficient
+
+- **Error handling**: Errors in Overshoot polling should be logged but not break the monitoring loop:
+  - Use try/catch around Overshoot SDK calls
+  - Log errors to console
+  - Continue polling even if individual requests fail
+
+- **State updates**: Danger level updates trigger SMS alerts via the hook's internal logic, not from components directly.
+
+## Examples
+
+<example>
+**Correct**: Using the hook in a component:
+```typescript
+import { useOvershootVision } from '@/app/overshoot';
+
+export default function DashboardPage() {
+  const {
+    sections,
+    overallDangerLevel,
+    dangerSince,
+    isMonitoring,
+    setIsMonitoring,
+  } = useOvershootVision();
+
+  // Hook handles SMS alerts internally
+  return <div>Danger: {overallDangerLevel}</div>;
+}
+```
+
+**Incorrect**: Duplicating Overshoot polling:
+```typescript
+// DON'T DO THIS - duplicates hook logic
+useEffect(() => {
+  const interval = setInterval(async () => {
+    const result = await overshootSDK.analyze(frame);
+    // duplicate logic
+  }, 1000);
+}, []);
+```
+</example>
+
+<example type="invalid">
+**Incorrect**: Adding blocking operations in render:
+```typescript
+// DON'T DO THIS - blocks render and polling
+export default function DashboardPage() {
+  const { overallDangerLevel } = useOvershootVision();
+  
+  // DON'T - this blocks the render cycle
+  const heavyComputation = expensiveFunction(overallDangerLevel);
+  
+  return <div>{heavyComputation}</div>;
+}
+```
+</example>
+
+<example>
+**Correct**: Extending the hook for new features:
+```typescript
+// In useOvershootVision.ts or new hook file
+export function useOvershootVisionExtended() {
+  const base = useOvershootVision();
+  
+  // Add new features that depend on base hook
+  useEffect(() => {
+    if (base.overallDangerLevel === 'DANGER') {
+      // additional logic
+    }
+  }, [base.overallDangerLevel]);
+  
+  return { ...base, newFeature: ... };
+}
+```
+</example>

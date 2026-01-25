@@ -1,0 +1,97 @@
+---
+description: SMS state persistence rules - maintain backward compatibility and single source of truth for state management
+globs:
+  - app/sms/smsState.ts
+  - app/api/sms/**/*
+---
+
+# SMS State & Persistence Rules
+
+## Critical Rules
+
+- **State shape**: The state structure in `smsState.ts` must remain backward compatible with existing `.sms-state.json` files:
+  ```typescript
+  interface SMSState {
+    consecutiveDangerCount: number;
+    lastAlertSentTime: number | null;
+    lastDangerLevel: string | null;
+    alertHistory: AlertRecord[];
+  }
+  ```
+
+- **Backward compatibility**: Any new fields must:
+  - Have defaults when loading missing fields from disk
+  - Use optional fields or provide fallback values in `initializeState()`
+  - Never break existing `.sms-state.json` files
+
+- **Alert history**: Keep `alertHistory` capped at 100 entries (already implemented in `recordAlertSent`)
+
+- **Single I/O handler**: Only `smsState.ts` handles disk I/O. Other files use exported functions:
+  - `initializeState()` - loads from disk
+  - `updateDangerLevel()` - updates count and persists
+  - `shouldTriggerAlert()` - checks threshold
+  - `isThrottled()` - checks throttle window
+  - `recordAlertSent()` - records alert and persists
+
+- **State file location**: State file is `.sms-state.json` at project root (via `process.cwd()`)
+
+## Examples
+
+<example>
+**Correct**: Adding a new optional field with default:
+```typescript
+interface SMSState {
+  consecutiveDangerCount: number;
+  lastAlertSentTime: number | null;
+  lastDangerLevel: string | null;
+  alertHistory: AlertRecord[];
+  totalAlertsSent?: number; // new optional field
+}
+
+let state: SMSState = {
+  consecutiveDangerCount: 0,
+  lastAlertSentTime: null,
+  lastDangerLevel: null,
+  alertHistory: [],
+  totalAlertsSent: 0, // default value
+};
+
+export function initializeState() {
+  try {
+    if (fs.existsSync(STATE_FILE)) {
+      const data = JSON.parse(fs.readFileSync(STATE_FILE, 'utf-8'));
+      state = {
+        ...state, // defaults
+        ...data,  // loaded data
+        totalAlertsSent: data.totalAlertsSent ?? 0, // handle missing field
+      };
+    }
+  } catch (error) {
+    // handle error
+  }
+}
+```
+
+**Incorrect**: Breaking existing state files:
+```typescript
+// DON'T DO THIS - removes fields or changes structure without defaults
+interface SMSState {
+  consecutiveDangerCount: number;
+  // removed lastAlertSentTime - breaks existing files!
+  newRequiredField: string; // no default, breaks existing files!
+}
+```
+</example>
+
+<example type="invalid">
+**Incorrect**: Direct file access from route handlers:
+```typescript
+// DON'T DO THIS - bypasses smsState.ts
+import fs from 'fs';
+export async function POST(request: NextRequest) {
+  const state = JSON.parse(fs.readFileSync('.sms-state.json', 'utf-8'));
+  state.count = 5;
+  fs.writeFileSync('.sms-state.json', JSON.stringify(state));
+}
+```
+</example>

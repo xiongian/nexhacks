@@ -1,0 +1,102 @@
+---
+description: TypeScript naming conventions and code style guidelines
+globs:
+  - **/*.ts
+  - **/*.tsx
+---
+
+# TypeScript Style & Naming
+
+## Critical Rules
+
+- **Naming conventions**:
+  - `camelCase` for variables and functions: `dangerLevel`, `updateDangerLevel`
+  - `PascalCase` for React components and types: `VideoFeed`, `SMSState`, `AlertRecord`
+  - `UPPER_SNAKE_CASE` for constants: `STATE_FILE`, `THROTTLE_WINDOW_MS`
+
+- **Type definitions**: Prefer explicit types and interfaces for API request/response bodies:
+  ```typescript
+  interface AlertRequest {
+    dangerLevel: 'SAFE' | 'WARNING' | 'DANGER';
+    description: string;
+    personGrid: boolean[][];
+  }
+  
+  interface AlertResponse {
+    success: boolean;
+    message: string;
+    consecutiveCount?: number;
+    throttled?: boolean;
+  }
+  ```
+
+- **Error handling**: Use early returns, avoid deeply nested if blocks:
+  ```typescript
+  // Prefer this
+  if (!dangerLevel) {
+    return NextResponse.json({ error: 'Missing dangerLevel' }, { status: 400 });
+  }
+  if (!isValid(dangerLevel)) {
+    return NextResponse.json({ error: 'Invalid dangerLevel' }, { status: 400 });
+  }
+  // main logic here
+  
+  // Avoid this
+  if (dangerLevel) {
+    if (isValid(dangerLevel)) {
+      if (shouldTrigger()) {
+        // deeply nested
+      }
+    }
+  }
+  ```
+
+- **Type safety**: Avoid `any` types. Use `unknown` and type guards if type is truly unknown.
+
+## Examples
+
+<example>
+**Correct**: Explicit types and early returns:
+```typescript
+interface SMSConfig {
+  accountSid: string;
+  authToken: string;
+  fromNumber: string;
+  toNumber: string;
+}
+
+function sendSMS(config: SMSConfig, message: string): Promise<void> {
+  if (!config.accountSid) {
+    throw new Error('Missing accountSid');
+  }
+  if (!message.trim()) {
+    throw new Error('Message cannot be empty');
+  }
+  // send logic
+}
+```
+
+**Incorrect**: Implicit types and nested conditions:
+```typescript
+// DON'T DO THIS
+function sendSMS(config: any, message: any) {
+  if (config) {
+    if (config.accountSid) {
+      if (message) {
+        // deeply nested logic
+      }
+    }
+  }
+}
+```
+</example>
+
+<example type="invalid">
+**Incorrect**: Using `any`:
+```typescript
+// DON'T DO THIS
+function processAlert(data: any) {
+  return data.dangerLevel; // no type safety
+}
+```
+</example>

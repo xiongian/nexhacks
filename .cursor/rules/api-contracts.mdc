@@ -1,0 +1,99 @@
+---
+description: Next.js API route contract rules - consistent request/response patterns and error handling
+globs:
+  - app/api/**/*
+---
+
+# API Contracts (Next.js App Router)
+
+## Critical Rules
+
+- **Route handlers**: Use Next.js App Router route handlers:
+  - Export `async function POST(request: NextRequest)` or `GET(request: NextRequest)`
+  - Import from `next/server`: `NextRequest`, `NextResponse`
+
+- **Input validation**: All JSON APIs must:
+  - Validate input payloads
+  - Return `400 Bad Request` with error message on invalid input
+  - Check required fields before processing
+
+- **Response structure**: Use consistent JSON response structure:
+  ```typescript
+  // Success response
+  { success: true, message: string, data?: any }
+  
+  // Error response
+  { error: string, details?: string }
+  ```
+
+- **Non-blocking operations**: For `/api/sms/alert`:
+  - Never block response on Twilio send operations
+  - Send SMS asynchronously or log errors but respond quickly
+  - Use try/catch around Twilio calls, log errors, but return 200/500 based on validation, not SMS send status
+
+- **Status codes**:
+  - `200` - Success (even if throttled, return 200 with `throttled: true`)
+  - `400` - Invalid input
+  - `429` - Rate limited/throttled (for `/api/sms/alert`)
+  - `500` - Server error
+
+## Examples
+
+<example>
+**Correct**: Validating input and consistent response:
+```typescript
+export async function POST(request: NextRequest) {
+  try {
+    const body = await request.json();
+    const { dangerLevel, description } = body;
+
+    // Validate input
+    if (!dangerLevel || !['SAFE', 'WARNING', 'DANGER'].includes(dangerLevel)) {
+      return NextResponse.json(
+        { error: 'Invalid or missing dangerLevel' },
+        { status: 400 }
+      );
+    }
+
+    // Process (non-blocking Twilio)
+    try {
+      await sendInitialAlertSMS(dangerLevel, description);
+    } catch (error) {
+      console.error('SMS send failed:', error);
+      // Continue - don't block response
+    }
+
+    return NextResponse.json({
+      success: true,
+      message: 'Alert processed',
+      consecutiveCount: 3
+    });
+  } catch (error) {
+    return NextResponse.json(
+      { error: 'Internal server error', details: (error as Error).message },
+      { status: 500 }
+    );
+  }
+}
+```
+
+**Incorrect**: Inconsistent response format:
+```typescript
+// DON'T DO THIS - inconsistent structure
+export async function POST(request: NextRequest) {
+  return NextResponse.json({ ok: true }); // different format
+  return NextResponse.json({ status: 'error' }); // different format
+}
+```
+</example>
+
+<example type="invalid">
+**Incorrect**: Blocking on external service:
+```typescript
+// DON'T DO THIS - blocks response waiting for Twilio
+export async function POST(request: NextRequest) {
+  await twilioClient.messages.create({ ... }); // blocks here
+  return NextResponse.json({ success: true });
+}
+```
+</example>

@@ -1,0 +1,57 @@
+---
+description: Core architecture rules for SMS alert system - single source of truth for alert logic and state management
+alwaysApply: true
+---
+
+# Core Overshoot SMS Architecture
+
+## Critical Rules
+
+- **Single source of truth**: All alert logic must go through `app/sms/smsState.ts` and `app/api/sms/alert/route.ts`. Never duplicate state management logic elsewhere.
+
+- **Alert flow invariants**:
+  - "DANGER" streak threshold is **3 consecutive events** before sending an alert
+  - Throttle window is **60 seconds** between alerts
+  - State lives in `.sms-state.json` and must be read/updated via exported helpers from `smsState.ts`, never ad-hoc `fs` calls
+
+- **API contract**:
+  - `POST /api/sms/alert` request/response shapes as documented in `IMPLEMENTATION.md`
+  - `POST /api/sms/incoming` always returns 200 and never introduces auth requirements that block Twilio webhooks
+
+- **State access**: Only `app/sms/smsState.ts` handles disk I/O. Other files use its exported functions (`initializeState`, `updateDangerLevel`, `shouldTriggerAlert`, `isThrottled`, `recordAlertSent`, etc.)
+
+## Examples
+
+<example>
+**Correct**: Adding a new alert type that goes through `smsState.ts`:
+```typescript
+// In app/api/sms/alert/route.ts
+import { updateDangerLevel, shouldTriggerAlert } from '@/app/sms/smsState';
+
+const consecutiveCount = updateDangerLevel(dangerLevel);
+if (shouldTriggerAlert() && !isThrottled()) {
+  // send alert
+}
+```
+
+**Incorrect**: Directly writing to `.sms-state.json`:
+```typescript
+// DON'T DO THIS
+import fs from 'fs';
+fs.writeFileSync('.sms-state.json', JSON.stringify({ count: 5 }));
+```
+</example>
+
+<example type="invalid">
+**Incorrect**: Duplicating alert logic in a component:
+```typescript
+// DON'T DO THIS - don't track consecutive danger in components
+const [dangerCount, setDangerCount] = useState(0);
+if (dangerLevel === 'DANGER') {
+  setDangerCount(prev => prev + 1);
+  if (dangerCount >= 3) {
+    // send alert directly
+  }
+}
+```
+</example>

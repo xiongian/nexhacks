@@ -1,0 +1,122 @@
+---
+description: Testing patterns and manual testing tools for SMS and API routes
+globs:
+  - app/sms/**/*
+  - app/api/**/*
+  - scripts/**/*
+  - **/*.test.*
+  - **/*.spec.*
+---
+
+# Testing & Manual Tools
+
+## Critical Rules
+
+- **Canonical testing methods**:
+  - **API testing**: Use `curl` examples for `/api/sms/alert`:
+    ```bash
+    curl -X POST http://localhost:3000/api/sms/alert \
+      -H "Content-Type: application/json" \
+      -d '{"dangerLevel": "DANGER", "description": "Test", "personGrid": []}'
+    ```
+  
+  - **Twilio testing**: Use Node.js one-liner for Twilio sanity checks:
+    ```bash
+    node -e "require('./app/sms/automated_message.js').sendTestMessage()"
+    ```
+  
+  - **State inspection**: View `.sms-state.json` directly:
+    ```bash
+    cat .sms-state.json
+    ```
+
+- **Test preferences**: When adding tests, prefer:
+  - **Integration tests** for API routes over mocking Twilio internals
+  - Test the actual flow: danger detection → alert trigger → SMS send
+  - Test state persistence by reading/writing `.sms-state.json`
+
+- **Manual testing workflow**:
+  1. Start monitoring in dashboard
+  2. Simulate 3 consecutive DANGER detections (or use test data)
+  3. Verify SMS received on phone
+  4. Reply "1" to test status response
+  5. Reply "2" to test image response
+
+- **Test data**: Use realistic test data that matches Overshoot SDK response format:
+  ```typescript
+  const mockOvershootResult = {
+    dangerLevel: 'DANGER',
+    description: 'Two people fighting aggressively',
+    personGrid: Array(10).fill(null).map(() => Array(10).fill(false))
+  };
+  ```
+
+## Examples
+
+<example>
+**Correct**: Integration test for alert flow:
+```typescript
+// tests/api/sms-alert.test.ts
+import { POST } from '@/app/api/sms/alert/route';
+
+describe('SMS Alert API', () => {
+  it('triggers alert after 3 consecutive DANGER events', async () => {
+    // First two DANGER events
+    await POST(createRequest({ dangerLevel: 'DANGER' }));
+    await POST(createRequest({ dangerLevel: 'DANGER' }));
+    
+    // Third should trigger alert
+    const response = await POST(createRequest({ dangerLevel: 'DANGER' }));
+    const data = await response.json();
+    
+    expect(data.success).toBe(true);
+    expect(data.consecutiveCount).toBe(3);
+  });
+});
+```
+
+**Incorrect**: Over-mocking Twilio:
+```typescript
+// DON'T DO THIS - too much mocking, tests implementation details
+jest.mock('twilio', () => ({
+  __esModule: true,
+  default: jest.fn(() => ({
+    messages: {
+      create: jest.fn().mockResolvedValue({ sid: 'test' })
+    }
+  }))
+}));
+```
+</example>
+
+<example>
+**Correct**: Manual testing script:
+```typescript
+// scripts/test-sms-alert.ts
+import { sendInitialAlertSMS } from '../app/sms/automated_message';
+
+async function testAlert() {
+  try {
+    await sendInitialAlertSMS('DANGER', 'Test alert from script');
+    console.log('✅ Alert sent successfully');
+  } catch (error) {
+    console.error('❌ Failed to send alert:', error);
+  }
+}
+
+testAlert();
+```
+
+Run with: `ts-node scripts/test-sms-alert.ts`
+</example>
+
+<example type="invalid">
+**Incorrect**: Testing with hardcoded values:
+```typescript
+// DON'T DO THIS - hardcodes phone numbers
+const testConfig = {
+  from: '+1234567890', // hardcoded
+  to: '+0987654321'    // hardcoded
+};
+```
+</example>
