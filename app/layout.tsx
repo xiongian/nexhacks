@@ -29,7 +29,7 @@ export default function RootLayout({
     <ClerkProvider>
       <html lang="en">
         <body className={`${manrope.variable} antialiased`}>
-          <header className="flex justify-end items-center p-4 gap-4 h-16">
+          <header className="flex justify-end items-center p-4 gap-4 h-16 bg-background">
             <SignedOut>
               <SignInButton />
               <SignUpButton>
