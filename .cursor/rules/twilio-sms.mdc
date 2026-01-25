@@ -1,0 +1,66 @@
+---
+description: Twilio SMS integration rules - all outbound SMS must go through automated_message.js wrapper
+globs:
+  - app/api/sms/**/*
+  - app/sms/**/*
+---
+
+# Twilio & SMS Rules
+
+## Critical Rules
+
+- **SMS wrapper**: All outbound SMS must go through `app/sms/automated_message.js` exported functions (`sendInitialAlertSMS`, `sendStatusResponseSMS`, `sendImageResponseSMS`). Never instantiate Twilio clients directly in route handlers.
+
+- **Environment variables**: Never hardcode phone numbers. Always read from environment variables:
+  - `TWILIO_ACCOUNT_SID`
+  - `TWILIO_AUTH_TOKEN`
+  - `TWILIO_FROM_NUMBER`
+  - `TWILIO_TO_NUMBER`
+
+- **Webhook behavior**: `/api/sms/incoming` must be tolerant:
+  - Always return 200 OK to Twilio (prevents retry loops)
+  - Log errors but don't throw
+  - Never add authentication that blocks Twilio's POST requests
+
+- **Media handling**: When implementing image sending (currently placeholder):
+  - Prefer Twilio media URLs or cloud storage URLs (S3, Cloudinary)
+  - Do NOT base64 encode large images in SMS responses
+  - Use Twilio's MMS capabilities if sending images directly
+
+## Examples
+
+<example>
+**Correct**: Using the wrapper function:
+```typescript
+// In app/api/sms/alert/route.ts
+import { sendInitialAlertSMS } from '@/app/sms/automated_message';
+
+await sendInitialAlertSMS(dangerLevel, description);
+```
+
+**Incorrect**: Creating Twilio client directly:
+```typescript
+// DON'T DO THIS
+import twilio from 'twilio';
+const client = twilio(accountSid, authToken);
+await client.messages.create({
+  from: '+1234567890', // hardcoded
+  to: '+0987654321',   // hardcoded
+  body: 'Alert'
+});
+```
+</example>
+
+<example type="invalid">
+**Incorrect**: Adding auth to webhook:
+```typescript
+// DON'T DO THIS - Twilio can't authenticate
+export async function POST(request: NextRequest) {
+  const auth = request.headers.get('authorization');
+  if (auth !== 'Bearer secret') {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+  // ... rest of handler
+}
+```
+</example>
